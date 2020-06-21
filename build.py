@@ -58,8 +58,8 @@ def parse_arguments():
     )
     parser.add_argument('-c', '--c-compiler', metavar = '<c-compiler>', default = 'cc', help = 'C compiler.')
     parser.add_argument('-C', '--cpp-compiler', metavar = '<compiler>', default = 'c++', help = 'C++ compiler.')
-    parser.add_argument('-f', '--cflags', metavar = '<c-flags>', default = '-O2 -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -isystem  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include', help = 'C compiler flags.')
-    parser.add_argument('-F', '--cppflags', metavar = '<cpp-flags>', default = '-O2 -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -isystem  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include', help = 'C++ compiler flags.')
+    parser.add_argument('-f', '--cflags', metavar = '<c-flags>', default = '-O2 -g ', help = 'C compiler flags.')
+    parser.add_argument('-F', '--cppflags', metavar = '<cpp-flags>', default = '-O2 -g ', help = 'C++ compiler flags.')
     
     return parser.parse_args()
 

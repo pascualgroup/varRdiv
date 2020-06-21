@@ -2733,7 +2733,8 @@ void update_biting_time(Population * pop, bool initial) {
 
 void update_immigration_time(Population * pop, bool initial) {
     BEGIN();
-    pop->next_immigration_time = draw_exponential_after_now(IMMIGRATION_RATE[pop->ind]*pop->IRS_immigration_rate_factor*pop->MDA_immigration_rate_factor);
+    //realized migration rates are adjusted to accomodate popsize*migration rate
+    pop->next_immigration_time = draw_exponential_after_now(IMMIGRATION_RATE[pop->ind]*N_HOSTS[pop->ind]*pop->IRS_immigration_rate_factor*pop->MDA_immigration_rate_factor);
     if(initial) {
         immigration_queue.add(pop);
     }
