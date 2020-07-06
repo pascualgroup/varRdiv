@@ -36,6 +36,10 @@ double next_info_time = 0.0;
 uint64_t n_infections_cumulative = 0;
 
 std::array<uint64_t, N_LOCI> n_alleles = N_ALLELES_INITIAL;
+std::array<uint64_t, 2> GROUP_GENE_NUMBER = {
+    (uint64_t)round(GROUP_GENE_RATIOS[0]*N_GENES_PER_STRAIN),
+    (uint64_t)round(GROUP_GENE_RATIOS[1]*N_GENES_PER_STRAIN)};
+
 
 std::unordered_map<uint64_t,std::array<uint64_t,2>> pairIndexMap;
 
@@ -182,6 +186,7 @@ void destroy_infection(Infection * infection);
 
 Gene * get_current_gene(Infection * infection);
 Gene * draw_random_pool_gene();
+Gene * draw_random_group_gene(uint64_t group_id);
 
     
 uint64_t get_immune_allele_count(Host * host);
@@ -871,8 +876,20 @@ Strain * generate_random_strain(uint64_t n_new_genes, GeneSource new_gene_source
 //    std::array<Gene *, N_GENES_PER_STRAIN> genes;
     
     // Old genes
-    for(uint64_t i = n_new_genes; i < N_GENES_PER_STRAIN; i++) {
-        genes[i] = draw_random_pool_gene();
+    if (FIX_GENE_RATIO){
+        for(uint64_t i = n_new_genes; i < GROUP_GENE_NUMBER[0]; i++) {
+            genes[i] = draw_random_group_gene(0);
+        }
+        for(uint64_t i = GROUP_GENE_NUMBER[0]; i < N_GENES_PER_STRAIN; i++) {
+            genes[i] = draw_random_group_gene(1);
+        }
+
+        
+    }else{
+        for(uint64_t i = n_new_genes; i < N_GENES_PER_STRAIN; i++) {
+            genes[i] = draw_random_pool_gene();
+        }
+
     }
     
     // New genes
@@ -899,24 +916,69 @@ Strain * recombine_strains(Strain * s1, Strain * s2) {
     
     Strain * strain =  create_strain();
     auto & daughter_genes = strain->genes;
-    
+ 
     // Choose random subset of all genes from strains s1 and s2
     // [0, N_GENES_PER_STRAIN) mapped to s1
     // [N_GENES_PER_STRAIN, 2 * N_GENES_PER_STRAIN) mapped to s2
-    std::bitset<2 * N_GENES_PER_STRAIN> used;
-    for(uint64_t i = 0; i < N_GENES_PER_STRAIN; i++) {
-        // Choose random unused index across strains
-        uint64_t src_index;
-        do {
-            src_index = draw_uniform_index(2 * N_GENES_PER_STRAIN);
-        } while(used[src_index]);
-        used[src_index] = true;
-        if(src_index < N_GENES_PER_STRAIN) {
-            daughter_genes[i] = s1->genes[src_index]; 
+    
+    if(FIX_GENE_RATIO){
+        // keep the number of varA and varB as a fixed ratio
+
+        std::vector<Gene *> group0_genes;
+        std::vector<Gene *> group1_genes;
+        for(Gene * gene : s1->genes){
+            if(gene->upsGroup==0){
+                group0_genes.push_back(gene);
+            }else{
+                group1_genes.push_back(gene);
+            }
         }
-        else {
-            daughter_genes[i] = s2->genes[src_index - N_GENES_PER_STRAIN];
+        for(Gene * gene : s2->genes){
+            if(gene->upsGroup==0){
+                group0_genes.push_back(gene);
+            }else{
+                group1_genes.push_back(gene);
+            }
         }
+        
+        std::bitset<2 * N_GENES_PER_STRAIN> used;
+        for(uint64_t i = 0; i < GROUP_GENE_NUMBER[0]; i++) {            // Choose random unused index across
+            uint64_t src_index;
+            do {
+                src_index = draw_uniform_index(group0_genes.size());
+            } while(used[src_index]);
+            used[src_index] = true;
+            daughter_genes[i] = group0_genes[src_index];
+        }
+        
+        for(uint64_t i = GROUP_GENE_NUMBER[0]; i < N_GENES_PER_STRAIN; i++) {
+            // Choose random unused index across strains
+            uint64_t src_index;
+            do {
+                src_index = draw_uniform_index(group1_genes.size());
+            } while(used[src_index+GROUP_GENE_NUMBER[0]]);
+            used[src_index+GROUP_GENE_NUMBER[0]] = true;
+            daughter_genes[i] = group1_genes[src_index];
+        }
+
+    }else{
+        
+        std::bitset<2 * N_GENES_PER_STRAIN> used;
+        for(uint64_t i = 0; i < N_GENES_PER_STRAIN; i++) {
+            // Choose random unused index across strains
+            uint64_t src_index;
+            do {
+                src_index = draw_uniform_index(2 * N_GENES_PER_STRAIN);
+            } while(used[src_index]);
+            used[src_index] = true;
+            if(src_index < N_GENES_PER_STRAIN) {
+                daughter_genes[i] = s1->genes[src_index];
+            }
+            else {
+                daughter_genes[i] = s2->genes[src_index - N_GENES_PER_STRAIN];
+            }
+        }
+
     }
     
     if(OUTPUT_STRAINS) {
@@ -1155,6 +1217,14 @@ Gene * draw_random_pool_gene() {
     RETURN(gene);
 }
 
+Gene * draw_random_group_gene(uint64_t group_id) {
+    BEGIN();
+    Gene * gene = gene_manager.objects()[draw_uniform_index(N_GENES_INITIAL)];
+    while(gene->upsGroup != group_id){
+        gene = gene_manager.objects()[draw_uniform_index(N_GENES_INITIAL)];
+    }
+    RETURN(gene);
+}
     
 Gene * get_current_gene(Infection * infection) {
     BEGIN();
@@ -1845,7 +1915,12 @@ void do_biting_event() {
     Host * src_host = draw_random_source_host(pop); 
     Host * dst_host = draw_random_destination_host(pop);
     pop->n_bites_cumulative++;
-    transmit(src_host, dst_host);
+    
+    //count the total number of infections per host
+    uint64_t srcInf = get_active_infection_count(src_host);
+    if(srcInf>0){
+        transmit(src_host, dst_host);
+    }
     
     // Update biting event time
     update_biting_time(pop, false);

@@ -98,8 +98,10 @@ const double {RHO};
 //whether the two ups groups do not share allele to start with. if true, two groups are started separately with different sets of alleles
 //otherwise, the two groups start with same sets of alleles
 const bool {GROUPS_DO_NOT_SHARE_ALLELE};
-// if 10% is group 0, 90% is group 1, write [1,9]
+// if 10% is group 0, 90% is group 1, write [1,9], only two groups are allowed
 const std::vector<double> {GROUP_GENE_RATIOS};
+// if all the strains generated have fixed ratio of the two groups
+const bool {FIX_GENE_RATIO};
 //whether recombination only occurs in genes with similar alleles
 const bool {SIMILARITY_BIAS_RECOMBINATION};
 // trade-off level
