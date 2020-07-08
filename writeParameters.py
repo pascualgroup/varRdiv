@@ -31,7 +31,7 @@ if __name__ == "__main__":
 			if row['LOAD_FROM_CHECKPOINT'] == 'FALSE':
 				row['SAMPLE_DB_FILENAME'] = options.prefix + "_" + row['num'] + "_beforeIRS_sd.sqlite"
 				row['CHECKPOINT_SAVE_FILENAME'] = options.prefix + "_" + row['num'] + "_beforeIRS_cp.sqlite"
-				row['CHECKPOINT_LOAD_FILENAME'] = 'placeholder.sqlite'
+				row['CHECKPOINT_LOAD_FILENAME'] = ''
 			else:
 				row['SAMPLE_DB_FILENAME'] = options.prefix + "_" + row['num'] + "_afterIRS_sd.sqlite"
 				row['CHECKPOINT_SAVE_FILENAME'] = options.prefix + "_" + row['num'] + "_afterIRS_cp.sqlite"
