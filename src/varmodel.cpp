@@ -29,6 +29,8 @@ std::mt19937_64 rng(RANDOM_SEED);
 
 double now = 0.0;
 double next_sampling_time = T_BURNIN > HOST_SAMPLING_PERIOD ? T_BURNIN : HOST_SAMPLING_PERIOD;
+//always output summary every 30 days;
+double next_summary_time = 0;
 double next_verification_time = VERIFICATION_ON ? 0.0 : INF;
 double next_checkpoint_time = SAVE_TO_CHECKPOINT ? 0.0 : INF;
 //add a new type of event that introduce global mutations to the population
@@ -123,7 +125,6 @@ void verify_immunity_consistency();
 
 void initialize(bool override_seed, uint64_t random_seed);
 void clean_up();
-void initialize_pair_index();
 void validate_and_load_parameters();
 
 void write_summary();
@@ -170,7 +171,6 @@ Strain * create_strain();
 void destroy_strain(Strain * strain);
 void retain_strain(Strain * strain);
 void release_strain(Strain * strain);
-//void calculate_strain_RecombRate(Strain * strain);
 void get_gene_pair_recomb_rates(Infection * infection);
 
 std::array<uint64_t, 2> choose_recombine_genes(Infection * infection);
@@ -224,6 +224,7 @@ bool do_next_event();
 
 void do_verification_event();
 void do_sampling_event();
+void do_summary_event();
 void do_checkpoint_event();
 void do_IRS_event();
 void do_MDA_event();
@@ -1740,6 +1741,7 @@ enum class EventType {
     NONE,
     VERIFICATION,
     HOST_SAMPLING,
+    WRITE_SUMMARY,
     CHECKPOINT,
     BITING,
     IRS,
@@ -1777,6 +1779,10 @@ bool do_next_event() {
     if(next_sampling_time < next_event_time) {
         next_event_time = next_sampling_time;
         next_event_type = EventType::HOST_SAMPLING;
+    }
+    if(next_summary_time < next_event_time) {
+        next_event_time = next_summary_time;
+        next_event_type = EventType::WRITE_SUMMARY;
     }
     if(VERIFICATION_ON && next_verification_time < next_event_time) {
         next_event_time = next_verification_time;
@@ -1854,6 +1860,8 @@ bool do_next_event() {
         case EventType::HOST_SAMPLING:
             do_sampling_event();
             break;
+        case EventType::WRITE_SUMMARY:
+            do_summary_event();
         case EventType::CHECKPOINT:
             do_checkpoint_event();
             break;
@@ -1903,12 +1911,17 @@ void do_verification_event() {
 
 void do_sampling_event() {
     BEGIN();
-    write_summary();
     sample_hosts();
     next_sampling_time += HOST_SAMPLING_PERIOD;
     RETURN();
 }
 
+void do_summary_event() {
+    BEGIN();
+    write_summary();
+    next_summary_time += 30;
+    RETURN();
+}
 void do_checkpoint_event() {
     BEGIN();
     save_checkpoint();
@@ -2396,9 +2409,11 @@ void write_summary() {
             sqlite3_reset(summary_alleles_stmt);
         }
         
-        pop->infected_ratio = pop->n_infected_bites/pop->n_bites_cumulative;
-        //update immigration rate to incorporate infected
-        update_immigration_time(pop, false);
+        if (pop->n_bites_cumulative>0) {
+            pop->infected_ratio = pop->n_infected_bites/pop->n_bites_cumulative;
+            //update immigration rate to incorporate infected
+            update_immigration_time(pop, false);
+        }
         pop->n_infected_bites = 0;
         pop->n_bites_cumulative = 0;
         //record year average pop size
@@ -2626,8 +2641,10 @@ void load_global_state_from_checkpoint(sqlite3 * db, bool should_load_rng_state)
     next_checkpoint_time = sqlite3_column_double(stmt, 3);
     next_global_mutation_time = sqlite3_column_double(stmt, 4);
     n_infections_cumulative = sqlite3_column_int(stmt, 5);
-    next_sampling_time = now + T_BURNIN;
-     sqlite3_finalize(stmt);
+    current_pop_size = sqlite3_column_double(stmt, 6);
+    next_sampling_time = now + HOST_SAMPLING_PERIOD;
+    next_summary_time = now + 30;
+    sqlite3_finalize(stmt);
 }
 
 void load_allele_refs() {
