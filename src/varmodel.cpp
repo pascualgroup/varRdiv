@@ -17,6 +17,8 @@
 #include <sstream>
 #include <algorithm>
 #include <bitset>
+#include <chrono>
+using namespace std::chrono;
 
 namespace varmodel {
 
@@ -35,6 +37,9 @@ double next_verification_time = VERIFICATION_ON ? 0.0 : INF;
 double next_checkpoint_time = SAVE_TO_CHECKPOINT ? 0.0 : INF;
 //add a new type of event that introduce global mutations to the population
 double next_global_mutation_time = EXPECTED_EQUILIBRIUM;
+// Get starting timepoint
+auto start = high_resolution_clock::now();
+auto stop = high_resolution_clock::now();
 
 uint64_t n_infections_cumulative = 0;
 
@@ -596,7 +601,7 @@ void initialize_sample_db() {
     
     sqlite3_exec(sample_db,
         "CREATE TABLE IF NOT EXISTS summary ("
-            "time REAL, pop_id INTEGER, n_infections INTEGER, n_infected INTEGER, n_infected_bites INTEGER, n_total_bites INTEGER, n_circulating_strains INTEGER, n_circulating_genes INTEGER"
+            "time REAL, pop_id INTEGER, n_infections INTEGER, n_infected INTEGER, n_infected_bites INTEGER, n_total_bites INTEGER, n_circulating_strains INTEGER, n_circulating_genes INTEGER, exec_time REAL"
         ");",
         NULL, NULL, NULL
     );
@@ -648,7 +653,7 @@ void initialize_sample_db() {
                  NULL, NULL, NULL
                  );
 
-    sqlite3_prepare_v2(sample_db, "INSERT INTO summary VALUES (?,?,?,?,?,?,?,?);", -1, &summary_stmt, NULL);
+    sqlite3_prepare_v2(sample_db, "INSERT INTO summary VALUES (?,?,?,?,?,?,?,?,?);", -1, &summary_stmt, NULL);
     sqlite3_prepare_v2(sample_db, "INSERT INTO summary_alleles VALUES (?,?,?,?);", -1, &summary_alleles_stmt, NULL);
     
     sqlite3_prepare_v2(sample_db, "INSERT INTO hosts VALUES (?,?,?,?);", -1, &host_stmt, NULL);
@@ -1631,7 +1636,8 @@ void update_transition_time(Infection * infection, bool initial) {
         rate *= pow(get_active_infection_count(infection->host),-1); //concurrent infection reduces transition time
         }
         //a small chance that the infection got cleared, proportional to the gene's immunity
-        if (draw_bernoulli((1-immunity_level)*0.05)) {
+        //the clearance rate is higher for genes that higher higher specific immunity
+        if (draw_bernoulli((immunity_level)*0.05)) {
             infection->clearance_time = draw_exponential_after_now(rate);
         }else{
             infection->clearance_time = INF;
@@ -1758,7 +1764,8 @@ enum class EventType {
 
 void run(bool override_seed, uint64_t random_seed) {
     BEGIN();
-    
+    // Get starting timepoint
+    auto start = high_resolution_clock::now();
     initialize(override_seed, random_seed);
     while(do_next_event()) {  }
     clean_up();
@@ -2351,6 +2358,13 @@ void write_summary() {
     printf("\nSummary at t = %f:\n", now);
     printf("    n_infections_cumulative: %llu\n", n_infections_cumulative);
 
+    // Get duration. Substart timepoints to
+    // get durarion. To cast it to proper unit
+    // use duration cast method
+    stop = high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> dur_milli = stop - start;
+    start = stop;
+    
     double temp_cps = 0;
     for(Population * pop : population_manager.objects()) {
         uint64_t n_infected = 0;
@@ -2387,7 +2401,7 @@ void write_summary() {
         printf("         n_infectious_bites: %llu\n", pop->n_infected_bites);
         printf("      n_circulating_strains: %lu\n", distinct_strains.size());
         printf("        n_circulating_genes: %lu\n", distinct_genes.size());
-        
+        printf("             execution time: %f\n", dur_milli.count());
 
         sqlite3_bind_double(summary_stmt, 1, now); // time
         sqlite3_bind_int64(summary_stmt, 2, pop->id); //id of the population
@@ -2397,6 +2411,7 @@ void write_summary() {
         sqlite3_bind_int64(summary_stmt, 6, pop->n_bites_cumulative); //number of total bites in the sampling period
         sqlite3_bind_int64(summary_stmt, 7, distinct_strains.size()); // n_circulating_strains
         sqlite3_bind_int64(summary_stmt, 8, distinct_genes.size()); // n_circulating_genes
+        sqlite3_bind_double(summary_stmt, 9, dur_milli.count()); //execution time in milliseconds for this sampling period
         sqlite3_step(summary_stmt);
         sqlite3_reset(summary_stmt);
 

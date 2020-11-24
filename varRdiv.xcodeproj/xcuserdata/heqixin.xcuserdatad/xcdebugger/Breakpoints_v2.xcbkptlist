@@ -14,8 +14,8 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "927"
-            endingLineNumber = "927"
+            startingLineNumber = "932"
+            endingLineNumber = "932"
             landmarkName = "recombine_strains(s1, s2)"
             landmarkType = "9">
          </BreakpointContent>
@@ -30,10 +30,10 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "878"
-            endingLineNumber = "878"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "883"
+            endingLineNumber = "883"
+            landmarkName = "generate_recombRate(cat)"
+            landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -46,8 +46,8 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "44"
-            endingLineNumber = "44"
+            startingLineNumber = "49"
+            endingLineNumber = "49"
             landmarkName = "unknown"
             landmarkType = "0">
          </BreakpointContent>
@@ -62,8 +62,8 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "43"
-            endingLineNumber = "43"
+            startingLineNumber = "48"
+            endingLineNumber = "48"
             landmarkName = "unknown"
             landmarkType = "0">
          </BreakpointContent>
@@ -78,8 +78,8 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "46"
-            endingLineNumber = "46"
+            startingLineNumber = "51"
+            endingLineNumber = "51"
             landmarkName = "unknown"
             landmarkType = "0">
          </BreakpointContent>
@@ -94,9 +94,9 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2826"
-            endingLineNumber = "2826"
-            landmarkName = "write_summary()"
+            startingLineNumber = "2841"
+            endingLineNumber = "2841"
+            landmarkName = "draw_discrete_distribution(weights)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
@@ -110,8 +110,8 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1444"
-            endingLineNumber = "1444"
+            startingLineNumber = "1449"
+            endingLineNumber = "1449"
             landmarkName = "infect_host(host, strain)"
             landmarkType = "9">
          </BreakpointContent>
@@ -126,8 +126,8 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2087"
-            endingLineNumber = "2087"
+            startingLineNumber = "2094"
+            endingLineNumber = "2094"
             landmarkName = "transmit(src_host, dst_host)"
             landmarkType = "9">
          </BreakpointContent>
@@ -142,8 +142,8 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2088"
-            endingLineNumber = "2088"
+            startingLineNumber = "2095"
+            endingLineNumber = "2095"
             landmarkName = "transmit(src_host, dst_host)"
             landmarkType = "9">
          </BreakpointContent>
@@ -158,8 +158,8 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2098"
-            endingLineNumber = "2098"
+            startingLineNumber = "2105"
+            endingLineNumber = "2105"
             landmarkName = "transmit(src_host, dst_host)"
             landmarkType = "9">
          </BreakpointContent>
@@ -174,8 +174,8 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2174"
-            endingLineNumber = "2174"
+            startingLineNumber = "2181"
+            endingLineNumber = "2181"
             landmarkName = "do_global_mutation_event()"
             landmarkType = "9">
          </BreakpointContent>
@@ -190,8 +190,8 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2173"
-            endingLineNumber = "2173"
+            startingLineNumber = "2180"
+            endingLineNumber = "2180"
             landmarkName = "do_global_mutation_event()"
             landmarkType = "9">
          </BreakpointContent>
@@ -206,8 +206,8 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2175"
-            endingLineNumber = "2175"
+            startingLineNumber = "2182"
+            endingLineNumber = "2182"
             landmarkName = "do_global_mutation_event()"
             landmarkType = "9">
          </BreakpointContent>
@@ -222,8 +222,8 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2177"
-            endingLineNumber = "2177"
+            startingLineNumber = "2184"
+            endingLineNumber = "2184"
             landmarkName = "do_global_mutation_event()"
             landmarkType = "9">
          </BreakpointContent>
@@ -238,9 +238,9 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2873"
-            endingLineNumber = "2873"
-            landmarkName = "write_summary()"
+            startingLineNumber = "2888"
+            endingLineNumber = "2888"
+            landmarkName = "update_global_mutation_time()"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
@@ -254,9 +254,9 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2588"
-            endingLineNumber = "2588"
-            landmarkName = "write_summary()"
+            startingLineNumber = "2603"
+            endingLineNumber = "2603"
+            landmarkName = "load_checkpoint(should_load_rng_state)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
@@ -270,9 +270,9 @@
             filePath = "src/varmodel.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2589"
-            endingLineNumber = "2589"
-            landmarkName = "write_summary()"
+            startingLineNumber = "2604"
+            endingLineNumber = "2604"
+            landmarkName = "load_checkpoint(should_load_rng_state)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
