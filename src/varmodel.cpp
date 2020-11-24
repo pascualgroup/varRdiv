@@ -1765,7 +1765,6 @@ enum class EventType {
 void run(bool override_seed, uint64_t random_seed) {
     BEGIN();
     // Get starting timepoint
-    auto start = high_resolution_clock::now();
     initialize(override_seed, random_seed);
     while(do_next_event()) {  }
     clean_up();
@@ -1946,7 +1945,7 @@ void do_biting_event() {
     pop->n_bites_cumulative++;
     
     //count the total number of infections per host
-    uint64_t srcInf = get_active_infection_count(src_host);
+    //uint64_t srcInf = get_active_infection_count(src_host);
     transmit(src_host, dst_host);
 
     
