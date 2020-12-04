@@ -22,7 +22,6 @@ struct Host {
     double death_time;
     
     double next_immunity_loss_time;
-    double total_immunity;
     uint64_t completed_infection_count;
     
     // One-to-many relationships

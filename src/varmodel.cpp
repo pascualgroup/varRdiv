@@ -206,8 +206,6 @@ void lose_immunity(Host * host, AlleleRef * allele_ref);
 
 void update_host_infection_times(Host * host);
 void update_infection_times(Infection * infection);
-void update_dormant_infections(Host * host);
-void choose_dormant_infection(Infection * infection);
 double get_specific_immunity_level(Host * host, Gene * gene);
 uint64_t get_active_infection_count(Host * host);
 uint64_t get_active_ups_infection_count(Host * host, uint64_t upsGroup);
@@ -701,7 +699,6 @@ Host * create_host(Population * pop, bool newborn) {
     
     Host * host = host_manager.create();
     host->population = pop;
-    host->total_immunity = 0.0;
     host->MDA_effective_period = false;
     double lifetime = std::min(
         draw_exponential(1.0 / MEAN_HOST_LIFETIME),
@@ -1276,7 +1273,6 @@ void gain_immunity(Host * host, Gene * gene) {
         else {
             immunity->immunity_level_by_allele[gene->alleles[i]]+= addImm;
         }
-        host->total_immunity+=addImm;
     }
     update_next_immunity_loss_time(host);
     RETURN();
@@ -1288,7 +1284,7 @@ void update_next_immunity_loss_time(Host * host) {
         RETURN();
     }
     //uint64_t immune_allele_count = get_immune_allele_count(host);
-    host->next_immunity_loss_time = draw_exponential_after_now(IMMUNITY_LOSS_RATE * host->total_immunity);
+    host->next_immunity_loss_time = draw_exponential_after_now(IMMUNITY_LOSS_RATE * host->immune_history->alleles_with_immunity.size());
     immunity_loss_queue.update(host);
     RETURN();
 }
@@ -1324,7 +1320,6 @@ void lose_immunity(Host * host, AlleleRef * allele_ref) {
     else {
         immunity_level_by_allele[allele]--;
     }
-    host->total_immunity-=1;
 }
 
 uint64_t get_immune_allele_count(Host * host) {
@@ -1340,10 +1335,8 @@ double get_specific_immunity_level(Host * host, Gene * gene) {
         auto & immunity_level_by_allele = host->immune_history->immunity_by_locus[i]->immunity_level_by_allele;
         auto itr = immunity_level_by_allele.find(gene->alleles[i]);
         if(itr != immunity_level_by_allele.end()) {
-            if(itr->second >= 2){
+            if(itr->second >= 1){
                 immunity_count +=  1;
-            }else if (itr->second >= 1){
-                immunity_count += 0.5;
             }
         }
     }
@@ -1489,9 +1482,10 @@ void perform_infection_transition(Infection * infection) {
             update_mutation_time(infection, false);
             update_recombination_time(infection, false);
         }else{
-            infection->transition_time = INF;
-            infection->expression_index = -2;//-2 denotes dormant status
-            transition_queue.update(infection);
+            host->infections.erase(infection);
+            //infection->transition_time = INF;
+            //infection->expression_index = -2;//-2 denotes dormant status
+            //transition_queue.update(infection);
             RETURN();
         }
         
@@ -1540,49 +1534,19 @@ void clear_infection(Infection * infection) {
     
     Host * host = infection->host;
     //record infection duration, for every 1000 infections.
-    //if (n_infections_cumulative%1000 == 0) {
+    if (n_infections_cumulative%1000 == 0) {
         write_duration(host, infection);
-    //}
+    }
     host->infections.erase(infection);
     
     destroy_infection(infection);
     host->completed_infection_count++;
     
-    update_dormant_infections(host);
     
     if(SELECTION_MODE == GENERAL_IMMUNITY) {
         update_host_infection_times(host);
     }
     
-    RETURN();
-}
-
-void update_dormant_infections(Host * host){
-    BEGIN();
-    for(Infection * infection : host->infections) {
-        if(infection->expression_index == -2){
-            choose_dormant_infection(infection);
-        }
-    }
-    RETURN();
-
-};
-
-void choose_dormant_infection(Infection * infection){
-    BEGIN();
-    uint64_t actCount;
-    if(UPSGROUP_DIFF_RECEPTOR){
-        actCount = get_active_ups_infection_count(infection->host, infection->expression_order[0]->upsGroup);
-    }else{
-        actCount = get_active_infection_count(infection->host);
-    }
-    if((actCount<(5-UPSGROUP_DIFF_RECEPTOR*2))||draw_bernoulli(exp(-(double(actCount)-4+UPSGROUP_DIFF_RECEPTOR*2)/2))) {
-        infection->expression_index = 0;
-        infection->transition_time = now;
-        update_mutation_time(infection, false);
-        update_recombination_time(infection, false);
-        update_transition_time(infection,false);
-    }
     RETURN();
 }
     
@@ -1632,16 +1596,16 @@ void update_transition_time(Infection * infection, bool initial) {
             gene_specific_rate_immune * immunity_level
             );
         
-        if(COINFECTION_REDUCES_TRANSMISSION){
-        rate *= pow(get_active_infection_count(infection->host),-1); //concurrent infection reduces transition time
-        }
+        //if(COINFECTION_REDUCES_TRANSMISSION){
+        //rate *= pow(get_active_infection_count(infection->host),-1); //concurrent infection increases transition time
+        //}
         //a small chance that the infection got cleared, proportional to the gene's immunity
         //the clearance rate is higher for genes that higher higher specific immunity
-        if (draw_bernoulli((immunity_level)*0.05)) {
-            infection->clearance_time = draw_exponential_after_now(rate);
-        }else{
-            infection->clearance_time = INF;
-        }
+        //if (draw_bernoulli((immunity_level)*0.05)) {
+        //    infection->clearance_time = draw_exponential_after_now(rate);
+        //}else{
+        //    infection->clearance_time = INF;
+        //}
     }
     else {
         rate = TRANSITION_RATE_NOT_IMMUNE;
@@ -1868,6 +1832,7 @@ bool do_next_event() {
             break;
         case EventType::WRITE_SUMMARY:
             do_summary_event();
+            break;
         case EventType::CHECKPOINT:
             do_checkpoint_event();
             break;
@@ -2400,6 +2365,7 @@ void write_summary() {
         printf("         n_infectious_bites: %llu\n", pop->n_infected_bites);
         printf("      n_circulating_strains: %lu\n", distinct_strains.size());
         printf("        n_circulating_genes: %lu\n", distinct_genes.size());
+        printf("      n_circulating_alleles: %lu,%lu\n", distinct_alleles[0].size(),distinct_alleles[1].size());
         printf("             execution time: %f\n", dur_milli.count());
 
         sqlite3_bind_double(summary_stmt, 1, now); // time
