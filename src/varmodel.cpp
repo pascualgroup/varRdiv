@@ -2810,16 +2810,17 @@ uint64_t draw_discrete_distribution(std::vector<double> weights) {
 void update_biting_time(Population * pop, bool initial) {
     BEGIN();
     
-    double biting_rate = BITING_RATE_MEAN[pop->ind]*N_HOSTS[pop->ind];
+    //make sure amplitude and phase are set to 0 if using daily biting rate distribution.
+    double biting_rate = BITING_RATE_MEAN[pop->ind]*N_HOSTS[pop->ind]*
+    (1.0 + BITING_RATE_RELATIVE_AMPLITUDE[pop->ind] *
+     cos(2 * M_PI * ((now / T_YEAR) - BITING_RATE_PEAK_PHASE[pop->ind])));
+    
     if (pop->IRS_biting_rate>=0){
         biting_rate *= pop->IRS_biting_rate;
-    }else if(DAILY_BITING_RATE_DISTRIBUTION.size()==360){
-        biting_rate *= DAILY_BITING_RATE_DISTRIBUTION[(int)(now)%360];
-    }else{
-        biting_rate *= (1.0 + BITING_RATE_RELATIVE_AMPLITUDE[pop->ind] *cos(
-                          2 * M_PI * ((now / T_YEAR) - BITING_RATE_PEAK_PHASE[pop->ind])
-                          ));
+    }else if(DAILY_BITING_RATE_DISTRIBUTION.size()==(int)T_YEAR){
+        biting_rate *= DAILY_BITING_RATE_DISTRIBUTION[(int)(now)%(int)T_YEAR];
     }
+    
     pop->next_biting_time = draw_exponential_after_now(biting_rate);
     if(initial) {
         biting_queue.add(pop);
